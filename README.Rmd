@@ -1,0 +1,76 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# wikibaser
+
+<!-- badges: start -->
+[![dataobservatory](https://img.shields.io/badge/ecosystem-dataobservatory.eu-3EA135.svg)](https://dataobservatory.eu/)
+[![lifecycle](https://lifecycle.r-lib.org/articles/figures/lifecycle-experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![Project Status:
+WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![devel-version](https://img.shields.io/badge/devel%20version-0.0.1-blue.svg)](https://github.com/dataobservatory-eu/wikibaser/tree/main)
+
+<!-- badges: end -->
+
+# wikibaser
+
+**wikibaser** provides a lightweight R interface to the MediaWiki Action API for
+working with Wikibase repositories and Wikidata.
+
+The package aims to simplify common tasks such as:
+
+- authenticating with a Wikibase instance;
+- creating and editing Wikibase entities;
+- uploading files to the associated MediaWiki repository;
+- retrieving entities and file metadata; and
+- supporting simple federation workflows between Wikibase instances and Wikidata.
+
+The package is under active development.
+
+## Installation
+
+```r
+# install.packages("remotes")
+remotes::install_github("dataobservatory-eu/wikibaser")
+```
+
+## Example
+
+```r
+library(wikibaser)
+
+session <- wb_login(
+  api_url = "https://example.org/w/api.php",
+  username = "...",
+  password = "..."
+)
+
+wb_upload_file(
+  session = session,
+  file = "P7101565_thumbnail.jpg",
+  text = "Farmhouse (Deliņi farmstead)"
+)
+```
+
+## Status
+
+Current development focuses on:
+
+- authentication;
+- MediaWiki file uploads;
+- Wikibase entity operations; and
+- simple federation tools.
+
+Contributions, bug reports and feature requests are welcome.

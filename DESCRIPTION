@@ -1,6 +1,6 @@
 Package: wikibaser
 Title: Tools for MediaWiki, Wikibase and Wikidata Federation
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person(given="Daniel", family="Antal", 
            email= "daniel.antal@dataobservatory.eu", 

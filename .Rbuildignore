@@ -1,3 +1,4 @@
 ^review-wikibaser.txt$
 ^load_txb_credentials\.R$
 ^LICENSE\.md$
+^*\.jpg$

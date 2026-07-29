@@ -5,7 +5,7 @@ Authors@R:
     person(given="Daniel", family="Antal", 
            email= "daniel.antal@dataobservatory.eu", 
             role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-7513-6760")
+           comment = c(ORCID = "0000-0001-7513-6760"))
 Description: Provides a lightweight interface to the MediaWiki Action API for
     working with Wikibase repositories and Wikidata. Supports authentication,
     entity and file operations, and simple federation workflows between
@@ -14,11 +14,14 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
+Depends:
+    R (>= 4.1.0)
 Imports: 
     cli,
     curl,
     httr2
 Suggests: 
+    keyring,
     spelling,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

@@ -1,28 +1,35 @@
 #' Retrieve a Wikibase entity
 #'
-#' Retrieves an item or property from a Wikibase repository or a
-#' local entity cache. Supports public and authenticated repositories,
-#' configurable cache policies and retrieval of the original JSON
-#' response.
+#' Retrieves an item or property from a Wikibase repository,
+#' a managed entity cache or a directory of local JSON files.
 #'
-#' @param id A character string containing a Wikibase item or property
-#'   identifier, such as `"Q42"` or `"P31"`.
-#' @param session An optional authenticated Wikibase session returned
-#'   by [wb_login()].
-#' @param url An optional Wikibase API endpoint. If omitted, the
-#'   endpoint is determined from the session or cache. If neither
-#'   is supplied, the Wikidata API is used.
+#' @param id A Wikibase item or property identifier, such as
+#'   `"Q42"` or `"P31"`.
+#' @param session An optional authenticated Wikibase session
+#'   returned by [wb_login()].
+#' @param url An optional Wikibase API endpoint. If omitted,
+#'   the endpoint is determined from the session or cache.
+#'   Otherwise, the Wikidata API is used.
 #' @param as Character string specifying the return format.
 #'   Either `"list"` (default) or `"json"`.
 #' @param cache An optional entity cache created with
 #'   [wb_entity_cache()].
 #' @param policy Character string specifying the cache policy.
 #'   One of `"prefer-cache"` (default), `"prefer-api"`,
-#'   `"cache-only"` or `"api-only"`. See Details.
+#'   `"cache-only"` or `"api-only"`.
+#' @param path An optional directory containing entity JSON files
+#'   named by their identifiers, such as `Q42.json`.
+#'   If supplied, the entity is read directly from this directory.
+#'   No authentication, cache manifest or API connection is required.
 #'
 #' @details
-#' The function retrieves a single entity using the Wikibase
-#' `wbgetentities` API action. Both items and properties are supported.
+#' When `path` is supplied, the function reads the original JSON
+#' response from the specified directory. The session, URL,
+#' cache and retrieval policy are ignored. Local files are
+#' neither refreshed nor modified.
+#'
+#' Otherwise, the function retrieves entities through the
+#' Wikibase `wbgetentities` API action or a managed entity cache.
 #'
 #' The available cache policies are:
 #' \describe{
@@ -36,9 +43,8 @@
 #'     cached response if the API connection fails.
 #'   }
 #'   \item{`"cache-only"`}{
-#'     Retrieves the entity exclusively from the local cache,
-#'     regardless of its age. An error is raised if the entity
-#'     is not available in the cache.
+#'     Retrieves the entity exclusively from the managed cache,
+#'     regardless of its age.
 #'   }
 #'   \item{`"api-only"`}{
 #'     Retrieves the entity directly from the API without reading
@@ -46,15 +52,14 @@
 #'   }
 #' }
 #'
-#' A warning is issued whenever a stale cached response is used.
-#' Successfully retrieved and validated API responses are stored
-#' in the cache unless the `"api-only"` policy is selected.
+#' A warning is issued whenever a stale managed cache response
+#' is used. Successfully retrieved and validated API responses
+#' are stored in the supplied cache unless the `"api-only"`
+#' policy is selected.
 #'
 #' When a session, URL and cache are supplied together, their
 #' repository endpoints must agree. An authenticated cache can
 #' be refreshed only with a matching authenticated session.
-#' Previously cached entities can be retrieved offline without
-#' authentication.
 #'
 #' Cache fallback applies to API connection failures, not to
 #' API errors or missing entities.
@@ -63,52 +68,51 @@
 #' If `as = "list"`, a nested list containing the parsed entity,
 #' including its identifier, descriptive metadata and statements.
 #'
-#' If `as = "json"`, a character string containing the path to a
-#' temporary JSON file with the complete original API response.
-#' This file is independent of the cache and may be removed by
-#' the caller when no longer needed.
+#' If `as = "json"`, the path to a temporary JSON file containing
+#' the complete original API response. This file is independent
+#' of the original local or cached file.
 #'
 #' @seealso [wb_entity_cache()], [wb_login()]
 #'
 #' @export
 #'
 #' @examples
-#' # Open the bundled Wikidata example cache.
-#' cache <- wb_entity_cache(
-#'   path = system.file(
-#'     "extdata", "wikidata-cache",
-#'     package = "wikibaser",
-#'     mustWork = TRUE
-#'   ),
-#'   max_age_hours = Inf
+#' path <- system.file(
+#'   "extdata", "wikidata-cache",
+#'   package = "wikibaser",
+#'   mustWork = TRUE
 #' )
 #'
-#' # Retrieve an entity without an internet connection.
-#' entity <- wb_get_entity(
-#'   id = "Q42",
-#'   cache = cache,
-#'   policy = "cache-only"
-#' )
+#' # Read an entity directly from a local JSON file.
+#' entity <- wb_get_entity("Q42", path = path)
 #'
 #' entity$id
 #' entity$labels$mul$value
 #'
-#' # Retrieve the original JSON response.
+#' # Retrieve a copy of the original JSON response.
 #' json_file <- wb_get_entity(
-#'   id = "Q42",
-#'   as = "json",
-#'   cache = cache,
-#'   policy = "cache-only"
+#'   "Q42",
+#'   path = path,
+#'   as = "json"
 #' )
 #'
 #' file.exists(json_file)
 #' unlink(json_file)
 #'
-#' \donttest{
-#' # Retrieve an item directly from Wikidata.
-#' wb_get_entity("Q42")
+#' # Use a managed entity cache.
+#' cache <- wb_entity_cache(
+#'   path = path,
+#'   max_age_hours = Inf
+#' )
 #'
-#' # Retrieve a property directly from Wikidata.
+#' wb_get_entity(
+#'   "Q42",
+#'   cache = cache,
+#'   policy = "cache-only"
+#' )
+#'
+#' \donttest{
+#' wb_get_entity("Q42")
 #' wb_get_entity("P31")
 #' }
 wb_get_entity <- function(
@@ -117,10 +121,10 @@ wb_get_entity <- function(
   url = NULL,
   as = c("list", "json"),
   cache = NULL,
-  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only")
+  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only"),
+  path = NULL
 ) {
   as <- match.arg(as)
-  policy <- match.arg(policy)
 
   if (!is.character(id) || length(id) != 1L ||
     is.na(id) || !grepl("^[QP][1-9][0-9]*$", id)) {
@@ -129,6 +133,50 @@ wb_get_entity <- function(
       "{.arg id} must be an item or property identifier."
     )
   }
+
+  # Read an existing local JSON file.
+  if (!is.null(path)) {
+    if (!is.character(path) || length(path) != 1L ||
+      is.na(path) || !nzchar(path) || !dir.exists(path)) {
+      abort_argument(
+        "path",
+        "{.arg path} must be an existing directory."
+      )
+    }
+
+    file <- file.path(path, paste0(id, ".json"))
+
+    if (!file.exists(file)) {
+      cli::cli_abort(
+        "Entity file {.file {file}} does not exist.",
+        class = "wikibaser_entity_file_not_found"
+      )
+    }
+
+    body <- readBin(
+      file,
+      what = "raw",
+      n = file.info(file)$size
+    )
+
+    entity <- parse_entity_response(body, id)
+
+    if (as == "json") {
+      json_file <- tempfile(
+        pattern = paste0(id, "-"),
+        fileext = ".json"
+      )
+
+      writeBin(body, json_file)
+
+      return(json_file)
+    }
+
+    return(entity)
+  }
+
+  # Managed cache and API retrieval.
+  policy <- match.arg(policy)
 
   if (is.null(cache) && policy == "cache-only") {
     cli::cli_abort(
@@ -155,7 +203,6 @@ wb_get_entity <- function(
     (policy == "prefer-cache" &&
       !is.null(cached) && isTRUE(cached$fresh))
 
-  # Retrieve the API response if necessary.
   if (!use_cache) {
     if (!is.null(cache) &&
       !is.null(cache$username) &&
@@ -199,7 +246,6 @@ wb_get_entity <- function(
     use_cache <- is.null(resp)
   }
 
-  # Obtain the raw response.
   if (use_cache) {
     body <- cached$body
 
@@ -213,16 +259,13 @@ wb_get_entity <- function(
     body <- httr2::resp_body_raw(resp)
   }
 
-  # Validate and parse the response.
   entity <- parse_entity_response(body, id)
 
-  # Store newly retrieved and validated responses.
   if (!use_cache && !is.null(cache) && policy != "api-only") {
     file <- file.path(cache$path, paste0(id, ".json"))
     writeBin(body, file)
   }
 
-  # Return the complete JSON response in a temporary file.
   if (as == "json") {
     file <- tempfile(
       pattern = paste0(id, "-"),

@@ -10,19 +10,20 @@ wb_get_entity(
   url = NULL,
   as = c("list", "json"),
   cache = NULL,
-  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only")
+  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only"),
+  path = NULL
 )
 }
 \arguments{
-\item{id}{A character string containing a Wikibase item or property
-identifier, such as \code{"Q42"} or \code{"P31"}.}
+\item{id}{A Wikibase item or property identifier, such as
+\code{"Q42"} or \code{"P31"}.}
 
-\item{session}{An optional authenticated Wikibase session returned
-by \code{\link[=wb_login]{wb_login()}}.}
+\item{session}{An optional authenticated Wikibase session
+returned by \code{\link[=wb_login]{wb_login()}}.}
 
-\item{url}{An optional Wikibase API endpoint. If omitted, the
-endpoint is determined from the session or cache. If neither
-is supplied, the Wikidata API is used.}
+\item{url}{An optional Wikibase API endpoint. If omitted,
+the endpoint is determined from the session or cache.
+Otherwise, the Wikidata API is used.}
 
 \item{as}{Character string specifying the return format.
 Either \code{"list"} (default) or \code{"json"}.}
@@ -32,26 +33,33 @@ Either \code{"list"} (default) or \code{"json"}.}
 
 \item{policy}{Character string specifying the cache policy.
 One of \code{"prefer-cache"} (default), \code{"prefer-api"},
-\code{"cache-only"} or \code{"api-only"}. See Details.}
+\code{"cache-only"} or \code{"api-only"}.}
+
+\item{path}{An optional directory containing entity JSON files
+named by their identifiers, such as \code{Q42.json}.
+If supplied, the entity is read directly from this directory.
+No authentication, cache manifest or API connection is required.}
 }
 \value{
 If \code{as = "list"}, a nested list containing the parsed entity,
 including its identifier, descriptive metadata and statements.
 
-If \code{as = "json"}, a character string containing the path to a
-temporary JSON file with the complete original API response.
-This file is independent of the cache and may be removed by
-the caller when no longer needed.
+If \code{as = "json"}, the path to a temporary JSON file containing
+the complete original API response. This file is independent
+of the original local or cached file.
 }
 \description{
-Retrieves an item or property from a Wikibase repository or a
-local entity cache. Supports public and authenticated repositories,
-configurable cache policies and retrieval of the original JSON
-response.
+Retrieves an item or property from a Wikibase repository,
+a managed entity cache or a directory of local JSON files.
 }
 \details{
-The function retrieves a single entity using the Wikibase
-\code{wbgetentities} API action. Both items and properties are supported.
+When \code{path} is supplied, the function reads the original JSON
+response from the specified directory. The session, URL,
+cache and retrieval policy are ignored. Local files are
+neither refreshed nor modified.
+
+Otherwise, the function retrieves entities through the
+Wikibase \code{wbgetentities} API action or a managed entity cache.
 
 The available cache policies are:
 \describe{
@@ -65,9 +73,8 @@ Retrieves the entity from the API first. Falls back to a
 cached response if the API connection fails.
 }
 \item{\code{"cache-only"}}{
-Retrieves the entity exclusively from the local cache,
-regardless of its age. An error is raised if the entity
-is not available in the cache.
+Retrieves the entity exclusively from the managed cache,
+regardless of its age.
 }
 \item{\code{"api-only"}}{
 Retrieves the entity directly from the API without reading
@@ -75,56 +82,55 @@ or updating cached responses.
 }
 }
 
-A warning is issued whenever a stale cached response is used.
-Successfully retrieved and validated API responses are stored
-in the cache unless the \code{"api-only"} policy is selected.
+A warning is issued whenever a stale managed cache response
+is used. Successfully retrieved and validated API responses
+are stored in the supplied cache unless the \code{"api-only"}
+policy is selected.
 
 When a session, URL and cache are supplied together, their
 repository endpoints must agree. An authenticated cache can
 be refreshed only with a matching authenticated session.
-Previously cached entities can be retrieved offline without
-authentication.
 
 Cache fallback applies to API connection failures, not to
 API errors or missing entities.
 }
 \examples{
-# Open the bundled Wikidata example cache.
-cache <- wb_entity_cache(
-  path = system.file(
-    "extdata", "wikidata-cache",
-    package = "wikibaser",
-    mustWork = TRUE
-  ),
-  max_age_hours = Inf
+path <- system.file(
+  "extdata", "wikidata-cache",
+  package = "wikibaser",
+  mustWork = TRUE
 )
 
-# Retrieve an entity without an internet connection.
-entity <- wb_get_entity(
-  id = "Q42",
-  cache = cache,
-  policy = "cache-only"
-)
+# Read an entity directly from a local JSON file.
+entity <- wb_get_entity("Q42", path = path)
 
 entity$id
 entity$labels$mul$value
 
-# Retrieve the original JSON response.
+# Retrieve a copy of the original JSON response.
 json_file <- wb_get_entity(
-  id = "Q42",
-  as = "json",
-  cache = cache,
-  policy = "cache-only"
+  "Q42",
+  path = path,
+  as = "json"
 )
 
 file.exists(json_file)
 unlink(json_file)
 
-\donttest{
-# Retrieve an item directly from Wikidata.
-wb_get_entity("Q42")
+# Use a managed entity cache.
+cache <- wb_entity_cache(
+  path = path,
+  max_age_hours = Inf
+)
 
-# Retrieve a property directly from Wikidata.
+wb_get_entity(
+  "Q42",
+  cache = cache,
+  policy = "cache-only"
+)
+
+\donttest{
+wb_get_entity("Q42")
 wb_get_entity("P31")
 }
 }

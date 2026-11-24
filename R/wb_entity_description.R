@@ -18,6 +18,11 @@
 #'   Defaults to `NULL`, returning all available languages.
 #' @param cache An optional entity cache created with
 #'   [wb_entity_cache()].
+#' @param path An optional directory containing entity JSON files.
+#'   Passed to [wb_get_entity()] for direct local retrieval without
+#'   authentication, cache management or API requests.
+#' @param policy Entity retrieval policy passed to [wb_get_entity()].
+#'   Use `"cache-only"` for offline retrieval without authentication.
 #'
 #' @details
 #' In long format, each row represents a language in which
@@ -42,8 +47,9 @@
 #' If multiple distinct identifiers are found, a warning is
 #' issued and the equivalent identifier is set to `NA`.
 #'
-#' When a cache is supplied, entity retrieval follows the default
-#' `"prefer-cache"` policy of [wb_get_entity()].
+#' Entity retrieval follows the policies of [wb_get_entity()].
+#' When `path` is supplied, entities are read directly from
+#' local JSON files, bypassing cache management and API retrieval.
 #'
 #' @returns A tibble containing multilingual entity metadata.
 #'   In long format, the columns are `id`, `language`, `label`,
@@ -61,29 +67,17 @@
 #' @export
 #'
 #' @examples
-#' cache <- wb_entity_cache(
-#'   path = system.file(
-#'     "extdata", "wikidata-cache",
-#'     package = "wikibaser",
-#'     mustWork = TRUE
-#'   ),
-#'   max_age_hours = Inf
+#' path <- system.file(
+#'   "extdata", "wikidata-cache",
+#'   package = "wikibaser",
+#'   mustWork = TRUE
 #' )
 #'
-#' # Retrieve all available descriptive languages.
-#' wb_entity_description("Q42", cache = cache)
+#' wb_entity_description("Q42", path = path)
 #'
-#' # Select specific languages.
 #' wb_entity_description(
 #'   "Q42",
-#'   cache = cache,
-#'   languages = c("mul", "az", "en", "hu")
-#' )
-#'
-#' # Represent multilingual metadata in wide format.
-#' wb_entity_description(
-#'   "Q42",
-#'   cache = cache,
+#'   path = path,
 #'   languages = c("mul", "az", "en", "hu"),
 #'   format = "wide"
 #' )
@@ -93,9 +87,15 @@ wb_entity_description <- function(
   equivalency_property = NULL,
   format = c("long", "wide"),
   languages = NULL,
-  cache = NULL
+  cache = NULL,
+  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only"),
+  path = NULL
 ) {
   format <- match.arg(format)
+
+  if (is.null(path)) {
+    policy <- match.arg(policy)
+  }
 
   if (!is.null(languages) &&
     (!is.character(languages) || anyNA(languages) ||
@@ -120,7 +120,9 @@ wb_entity_description <- function(
   entity <- wb_get_entity(
     id = id,
     session = session,
-    cache = cache
+    cache = cache,
+    policy = policy,
+    path = path
   )
 
   langs <- as.character(sort(unique(c(

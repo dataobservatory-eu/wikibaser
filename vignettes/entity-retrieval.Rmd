@@ -39,7 +39,8 @@ for Q42 in its example data.
 
 ```{r fixture}
 cache_path <- system.file(
-  "extdata", "wikidata-cache", package = "wikibaser", mustWork = TRUE
+  "extdata", "wikidata-cache",
+  package = "wikibaser", mustWork = TRUE
 )
 fixture_file <- file.path(cache_path, "Q42.json")
 fixture_date <- as.Date(file.info(fixture_file)$mtime, tz = "UTC")
@@ -87,7 +88,8 @@ The original API response can also be retrieved as a JSON file.
 
 ```{r json}
 json_file <- wb_get_entity(
-  "Q42", cache = cache, policy = "cache-only", as = "json"
+  "Q42",
+  cache = cache, policy = "cache-only", as = "json"
 )
 file.exists(json_file)
 ```
@@ -117,7 +119,8 @@ substituting labels from another language.
 ```{r languages}
 languages <- c("mul", "az", "en", "hu")
 selected <- wb_entity_description(
-  "Q42", cache = cache, languages = languages
+  "Q42",
+  cache = cache, languages = languages
 )
 selected
 ```
@@ -127,7 +130,8 @@ Each language-specific term becomes a separate variable.
 
 ```{r wide}
 wide <- wb_entity_description(
-  "Q42", cache = cache, languages = languages, format = "wide"
+  "Q42",
+  cache = cache, languages = languages, format = "wide"
 )
 wide
 ```
@@ -230,7 +234,8 @@ building this vignette.
 current_entity <- wb_get_entity("Q42")
 working_cache <- wb_entity_cache(max_age_hours = 24)
 current_entity <- wb_get_entity(
-  "Q42", cache = working_cache, policy = "prefer-api"
+  "Q42",
+  cache = working_cache, policy = "prefer-api"
 )
 ```
 

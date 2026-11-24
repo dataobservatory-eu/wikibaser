@@ -1,4 +1,15 @@
+# wikibaser 0.0.21
 
+### Local entity retrieval
+
+* `wb_get_entity()` and `wb_entity_description()` now accept a
+  `path` argument for direct retrieval from local entity JSON files,
+  without authentication, cache manifests or API requests.
+* Local retrieval preserves the original JSON response and supports
+  reproducible offline analysis independently of cache management.
+* Added tests for direct local retrieval, byte-for-byte JSON
+  preservation, missing files and multilingual metadata extraction.
+  
 # wikibaser 0.0.2
 
 ## Entity retrieval and caching

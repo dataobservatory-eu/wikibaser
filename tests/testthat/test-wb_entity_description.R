@@ -89,7 +89,9 @@ test_that("wb_entity_description removes completely empty languages", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL,
+                             policy = "prefer-cache", path = NULL)
+      entity
   )
 
   result <- wb_entity_description("Q42")
@@ -116,7 +118,7 @@ test_that("wb_entity_description handles empty metadata", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   long <- wb_entity_description("Q42")
@@ -159,7 +161,7 @@ test_that("wb_entity_description extracts an equivalent identifier", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   long <- wb_entity_description(
@@ -208,7 +210,7 @@ test_that("wb_entity_description handles missing equivalency", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   long <- wb_entity_description(
@@ -340,7 +342,7 @@ test_that("wb_entity_description widens bilingual metadata", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   result <- wb_entity_description("Q1", format = "wide")
@@ -435,7 +437,7 @@ test_that("wb_entity_description handles unavailable languages", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   long <- wb_entity_description(
@@ -472,7 +474,7 @@ test_that("wb_entity_description handles unmatched language filters", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   long <- wb_entity_description(
@@ -507,7 +509,7 @@ test_that("wb_entity_description handles an empty language vector", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   result <- wb_entity_description(
@@ -529,7 +531,7 @@ test_that("wb_entity_description handles repeated language codes", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   result <- wb_entity_description(
@@ -553,7 +555,7 @@ test_that("wb_entity_description preserves original language codes", {
   )
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) entity
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) entity
   )
 
   result <- wb_entity_description(
@@ -640,7 +642,7 @@ test_that("wb_entity_description forwards the entity cache", {
   expected_cache <- cache
 
   testthat::local_mocked_bindings(
-    wb_get_entity = function(id, session = NULL, cache = NULL) {
+    wb_get_entity = function(id, session = NULL, cache = NULL, ...) {
       expect_identical(cache, expected_cache)
       expect_identical(id, "Q42")
 
@@ -656,4 +658,44 @@ test_that("wb_entity_description forwards the entity cache", {
   result <- wb_entity_description("Q42", cache = cache)
 
   expect_identical(result$label, "Douglas Adams")
+})
+
+test_that("wb_entity_description reads local JSON files", {
+  path <- tempfile(tmpdir = tempdir())
+  dir.create(path)
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  
+  fixture <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
+  )
+  
+  expect_true(file.copy(fixture, path))
+  
+  long <- wb_entity_description(
+    "Q42",
+    path = path,
+    languages = c("mul", "az")
+  )
+  
+  wide <- wb_entity_description(
+    "Q42",
+    path = path,
+    languages = c("mul", "az"),
+    format = "wide"
+  )
+  
+  expect_equal(nrow(long), 2L)
+  expect_equal(nrow(wide), 1L)
+  
+  expect_identical(wide$label_mul, "Douglas Adams")
+  expect_identical(wide$label_az, "Duqlas Adams")
+  
+  expect_error(
+    wb_entity_description("Q999999", path = path),
+    class = "wikibaser_entity_file_not_found"
+  )
+  
+  expect_false(file.exists(file.path(path, "cache.rds")))
 })

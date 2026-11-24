@@ -10,7 +10,9 @@ wb_entity_description(
   equivalency_property = NULL,
   format = c("long", "wide"),
   languages = NULL,
-  cache = NULL
+  cache = NULL,
+  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only"),
+  path = NULL
 )
 }
 \arguments{
@@ -33,6 +35,13 @@ Defaults to \code{NULL}, returning all available languages.}
 
 \item{cache}{An optional entity cache created with
 \code{\link[=wb_entity_cache]{wb_entity_cache()}}.}
+
+\item{policy}{Entity retrieval policy passed to \code{\link[=wb_get_entity]{wb_get_entity()}}.
+Use \code{"cache-only"} for offline retrieval without authentication.}
+
+\item{path}{An optional directory containing entity JSON files.
+Passed to \code{\link[=wb_get_entity]{wb_get_entity()}} for direct local retrieval without
+authentication, cache management or API requests.}
 }
 \value{
 A tibble containing multilingual entity metadata.
@@ -73,33 +82,22 @@ is found, it is returned in the \code{equivalent_id} column.
 If multiple distinct identifiers are found, a warning is
 issued and the equivalent identifier is set to \code{NA}.
 
-When a cache is supplied, entity retrieval follows the default
-\code{"prefer-cache"} policy of \code{\link[=wb_get_entity]{wb_get_entity()}}.
+Entity retrieval follows the policies of \code{\link[=wb_get_entity]{wb_get_entity()}}.
+When \code{path} is supplied, entities are read directly from
+local JSON files, bypassing cache management and API retrieval.
 }
 \examples{
-cache <- wb_entity_cache(
-  path = system.file(
-    "extdata", "wikidata-cache",
-    package = "wikibaser",
-    mustWork = TRUE
-  ),
-  max_age_hours = Inf
+path <- system.file(
+  "extdata", "wikidata-cache",
+  package = "wikibaser",
+  mustWork = TRUE
 )
 
-# Retrieve all available descriptive languages.
-wb_entity_description("Q42", cache = cache)
+wb_entity_description("Q42", path = path)
 
-# Select specific languages.
 wb_entity_description(
   "Q42",
-  cache = cache,
-  languages = c("mul", "az", "en", "hu")
-)
-
-# Represent multilingual metadata in wide format.
-wb_entity_description(
-  "Q42",
-  cache = cache,
+  path = path,
   languages = c("mul", "az", "en", "hu"),
   format = "wide"
 )

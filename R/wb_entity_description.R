@@ -1,37 +1,111 @@
 #' Retrieve multilingual Wikibase entity descriptions
 #'
-#' Retrieves the labels, descriptions and aliases of a Wikibase item
-#' or property. Only languages with at least one non-empty descriptive
-#' value are returned.
+#' Retrieves the labels, descriptions and aliases of a Wikibase
+#' item or property and represents them as a tibble in long or
+#' wide format.
 #'
-#' Optionally retrieves an equivalent entity identifier from a
-#' designated property linking the entity to another Wikibase.
+#' @param id A Wikibase item or property identifier, such as
+#'   `"Q42"` or `"P31"`.
+#' @param session An optional authenticated Wikibase session
+#'   returned by [wb_login()].
+#' @param equivalency_property An optional Wikibase property
+#'   identifier containing an equivalent entity identifier
+#'   from another repository.
+#' @param format Character string specifying the output format.
+#'   Either `"long"` (default) or `"wide"`.
+#' @param languages An optional character vector of Wikibase
+#'   language codes, such as `c("en", "hu", "nl")`.
+#'   Defaults to `NULL`, returning all available languages.
+#' @param cache An optional entity cache created with
+#'   [wb_entity_cache()].
 #'
-#' @param id A Wikibase item or property identifier, such as `"Q42"`
-#'   or `"P31"`.
-#' @param session An optional authenticated session returned by
-#'   [wb_login()].
-#' @param equivalency_property An optional property identifier
-#'   containing an equivalent item or property identifier in another
-#'   Wikibase repository.
+#' @details
+#' In long format, each row represents a language in which
+#' at least one label, description or alias is available.
 #'
-#' @returns A tibble with columns `id`, `language`, `label`,
-#'   `description` and `alias`. If `equivalency_property` is supplied,
-#'   an `equivalent_id` column is included after `id`.
-#'   Missing values are represented by `NA_character_`.
-#'   Multiple aliases are separated by `" | "`.
+#' In wide format, descriptive fields are represented by
+#' language-specific columns, such as `label_en`, `label_hu`,
+#' `description_en` and `alias_hu`.
+#'
+#' Language codes are preserved as supplied by the repository,
+#' including codes such as `"mul"`, `"en-gb"` and `"zh-hans"`.
+#' Requested languages without descriptive metadata are omitted.
+#'
+#' Multiple aliases within a language are separated by `" | "`.
+#' Missing or empty descriptive values are represented by
+#' `NA_character_`.
+#'
+#' If `equivalency_property` is supplied, non-deprecated
+#' statements containing valid item or property identifiers
+#' are examined. If exactly one distinct equivalent identifier
+#' is found, it is returned in the `equivalent_id` column.
+#' If multiple distinct identifiers are found, a warning is
+#' issued and the equivalent identifier is set to `NA`.
+#'
+#' When a cache is supplied, entity retrieval follows the default
+#' `"prefer-cache"` policy of [wb_get_entity()].
+#'
+#' @returns A tibble containing multilingual entity metadata.
+#'   In long format, the columns are `id`, `language`, `label`,
+#'   `description` and `alias`.
+#'   In wide format, descriptive fields are represented by
+#'   language-specific columns.
+#'   An additional `equivalent_id` column is included when
+#'   `equivalency_property` is supplied.
+#'   If no descriptive metadata matches the language selection,
+#'   a zero-row tibble is returned.
+#'
+#' @seealso [wb_get_entity()], [wb_entity_cache()],
+#'   [wb_entity_assertions()]
+#'
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' wb_entity_description("Q42")
-#' wb_entity_description("P31")
-#' }
+#' cache <- wb_entity_cache(
+#'   path = system.file(
+#'     "extdata", "wikidata-cache",
+#'     package = "wikibaser",
+#'     mustWork = TRUE
+#'   ),
+#'   max_age_hours = Inf
+#' )
+#'
+#' # Retrieve all available descriptive languages.
+#' wb_entity_description("Q42", cache = cache)
+#'
+#' # Select specific languages.
+#' wb_entity_description(
+#'   "Q42",
+#'   cache = cache,
+#'   languages = c("mul", "az", "en", "hu")
+#' )
+#'
+#' # Represent multilingual metadata in wide format.
+#' wb_entity_description(
+#'   "Q42",
+#'   cache = cache,
+#'   languages = c("mul", "az", "en", "hu"),
+#'   format = "wide"
+#' )
 wb_entity_description <- function(
   id,
   session = NULL,
-  equivalency_property = NULL
+  equivalency_property = NULL,
+  format = c("long", "wide"),
+  languages = NULL,
+  cache = NULL
 ) {
+  format <- match.arg(format)
+
+  if (!is.null(languages) &&
+    (!is.character(languages) || anyNA(languages) ||
+      any(!nzchar(trimws(languages))))) {
+    abort_argument(
+      "languages",
+      "{.arg languages} must be a character vector of language codes."
+    )
+  }
+
   if (!is.null(equivalency_property) &&
     (!is.character(equivalency_property) ||
       length(equivalency_property) != 1L ||
@@ -45,116 +119,87 @@ wb_entity_description <- function(
 
   entity <- wb_get_entity(
     id = id,
-    session = session
+    session = session,
+    cache = cache
   )
 
-  languages <- sort(unique(c(
+  langs <- as.character(sort(unique(c(
     names(entity$labels),
     names(entity$descriptions),
     names(entity$aliases)
-  )))
+  ))))
 
-  languages <- as.character(languages)
+  if (!is.null(languages)) {
+    langs <- intersect(langs, languages)
+  }
 
-  label <- vapply(
-    languages,
-    function(lang) {
-      value <- entity$labels[[lang]]$value
+  label <- vapply(langs, function(lang) {
+    value <- entity$labels[[lang]]$value
+    if (is.null(value)) NA_character_ else value
+  }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
-      if (is.null(value)) NA_character_ else value
-    },
-    FUN.VALUE = character(1),
-    USE.NAMES = FALSE
-  )
+  description <- vapply(langs, function(lang) {
+    value <- entity$descriptions[[lang]]$value
+    if (is.null(value)) NA_character_ else value
+  }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
-  description <- vapply(
-    languages,
-    function(lang) {
-      value <- entity$descriptions[[lang]]$value
+  alias <- vapply(langs, function(lang) {
+    values <- vapply(
+      entity$aliases[[lang]],
+      function(x) x$value,
+      FUN.VALUE = character(1)
+    )
 
-      if (is.null(value)) NA_character_ else value
-    },
-    FUN.VALUE = character(1),
-    USE.NAMES = FALSE
-  )
+    values <- values[!is.na(values) & nzchar(trimws(values))]
 
-  alias <- vapply(
-    languages,
-    function(lang) {
-      values <- vapply(
-        entity$aliases[[lang]],
-        function(x) x$value,
-        FUN.VALUE = character(1)
-      )
+    if (!length(values)) {
+      return(NA_character_)
+    }
 
-      values <- values[!is.na(values) & nzchar(trimws(values))]
+    paste(values, collapse = " | ")
+  }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
-      if (!length(values)) {
-        return(NA_character_)
-      }
-
-      paste(values, collapse = " | ")
-    },
-    FUN.VALUE = character(1),
-    USE.NAMES = FALSE
-  )
-
-  # Represent empty descriptive values as missing.
   label[!is.na(label) & !nzchar(trimws(label))] <- NA_character_
-
-  description[
-    !is.na(description) & !nzchar(trimws(description))
-  ] <- NA_character_
+  description[!is.na(description) &
+    !nzchar(trimws(description))] <- NA_character_
 
   result <- tibble::tibble(
-    id = rep(id, length(languages)),
-    language = languages,
+    id = rep(id, length(langs)),
+    language = langs,
     label = label,
     description = description,
     alias = alias
   )
 
-  # Remove languages without descriptive metadata.
   result <- result[
     !is.na(result$label) |
       !is.na(result$description) |
-      !is.na(result$alias), ,
-    drop = FALSE
+      !is.na(result$alias),
   ]
 
-  # Retrieve an equivalent identifier if requested.
   if (!is.null(equivalency_property)) {
     statements <- entity$claims[[equivalency_property]]
 
-    equivalent_ids <- vapply(
-      statements,
-      function(statement) {
-        if (identical(statement$rank, "deprecated")) {
-          return(NA_character_)
-        }
+    equivalent_ids <- vapply(statements, function(statement) {
+      if (identical(statement$rank, "deprecated")) {
+        return(NA_character_)
+      }
 
-        value <- statement$mainsnak$datavalue$value
+      value <- statement$mainsnak$datavalue$value
 
-        if (is.list(value)) {
-          value <- value$id
-        }
+      if (is.list(value)) {
+        value <- value$id
+      }
 
-        if (!is.character(value) ||
-          length(value) != 1L ||
-          is.na(value) ||
-          !grepl("^[QP][1-9][0-9]*$", value)) {
-          return(NA_character_)
-        }
+      if (!is.character(value) || length(value) != 1L ||
+        is.na(value) || !grepl("^[QP][1-9][0-9]*$", value)) {
+        return(NA_character_)
+      }
 
-        value
-      },
-      FUN.VALUE = character(1),
-      USE.NAMES = FALSE
-    )
+      value
+    }, FUN.VALUE = character(1), USE.NAMES = FALSE)
 
-    equivalent_ids <- unique(
-      equivalent_ids[!is.na(equivalent_ids)]
-    )
+    equivalent_ids <- unique(equivalent_ids[!is.na(equivalent_ids)])
 
     equivalent_id <- NA_character_
 
@@ -173,6 +218,14 @@ wb_entity_description <- function(
       result,
       equivalent_id = rep(equivalent_id, nrow(result)),
       .after = "id"
+    )
+  }
+
+  if (format == "wide") {
+    result <- tidyr::pivot_wider(
+      result,
+      names_from = "language",
+      values_from = c("label", "description", "alias")
     )
   }
 

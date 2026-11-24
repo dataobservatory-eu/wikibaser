@@ -4,38 +4,107 @@
 \alias{wb_entity_description}
 \title{Retrieve multilingual Wikibase entity descriptions}
 \usage{
-wb_entity_description(id, session = NULL, equivalency_property = NULL)
+wb_entity_description(
+  id,
+  session = NULL,
+  equivalency_property = NULL,
+  format = c("long", "wide"),
+  languages = NULL,
+  cache = NULL
+)
 }
 \arguments{
-\item{id}{A Wikibase item or property identifier, such as \code{"Q42"}
-or \code{"P31"}.}
+\item{id}{A Wikibase item or property identifier, such as
+\code{"Q42"} or \code{"P31"}.}
 
-\item{session}{An optional authenticated session returned by
-\code{\link[=wb_login]{wb_login()}}.}
+\item{session}{An optional authenticated Wikibase session
+returned by \code{\link[=wb_login]{wb_login()}}.}
 
-\item{equivalency_property}{An optional property identifier
-containing an equivalent item or property identifier in another
-Wikibase repository.}
+\item{equivalency_property}{An optional Wikibase property
+identifier containing an equivalent entity identifier
+from another repository.}
+
+\item{format}{Character string specifying the output format.
+Either \code{"long"} (default) or \code{"wide"}.}
+
+\item{languages}{An optional character vector of Wikibase
+language codes, such as \code{c("en", "hu", "nl")}.
+Defaults to \code{NULL}, returning all available languages.}
+
+\item{cache}{An optional entity cache created with
+\code{\link[=wb_entity_cache]{wb_entity_cache()}}.}
 }
 \value{
-A tibble with columns \code{id}, \code{language}, \code{label},
-\code{description} and \code{alias}. If \code{equivalency_property} is supplied,
-an \code{equivalent_id} column is included after \code{id}.
-Missing values are represented by \code{NA_character_}.
-Multiple aliases are separated by \code{" | "}.
+A tibble containing multilingual entity metadata.
+In long format, the columns are \code{id}, \code{language}, \code{label},
+\code{description} and \code{alias}.
+In wide format, descriptive fields are represented by
+language-specific columns.
+An additional \code{equivalent_id} column is included when
+\code{equivalency_property} is supplied.
+If no descriptive metadata matches the language selection,
+a zero-row tibble is returned.
 }
 \description{
-Retrieves the labels, descriptions and aliases of a Wikibase item
-or property. Only languages with at least one non-empty descriptive
-value are returned.
+Retrieves the labels, descriptions and aliases of a Wikibase
+item or property and represents them as a tibble in long or
+wide format.
 }
 \details{
-Optionally retrieves an equivalent entity identifier from a
-designated property linking the entity to another Wikibase.
+In long format, each row represents a language in which
+at least one label, description or alias is available.
+
+In wide format, descriptive fields are represented by
+language-specific columns, such as \code{label_en}, \code{label_hu},
+\code{description_en} and \code{alias_hu}.
+
+Language codes are preserved as supplied by the repository,
+including codes such as \code{"mul"}, \code{"en-gb"} and \code{"zh-hans"}.
+Requested languages without descriptive metadata are omitted.
+
+Multiple aliases within a language are separated by \code{" | "}.
+Missing or empty descriptive values are represented by
+\code{NA_character_}.
+
+If \code{equivalency_property} is supplied, non-deprecated
+statements containing valid item or property identifiers
+are examined. If exactly one distinct equivalent identifier
+is found, it is returned in the \code{equivalent_id} column.
+If multiple distinct identifiers are found, a warning is
+issued and the equivalent identifier is set to \code{NA}.
+
+When a cache is supplied, entity retrieval follows the default
+\code{"prefer-cache"} policy of \code{\link[=wb_get_entity]{wb_get_entity()}}.
 }
 \examples{
-\donttest{
-wb_entity_description("Q42")
-wb_entity_description("P31")
+cache <- wb_entity_cache(
+  path = system.file(
+    "extdata", "wikidata-cache",
+    package = "wikibaser",
+    mustWork = TRUE
+  ),
+  max_age_hours = Inf
+)
+
+# Retrieve all available descriptive languages.
+wb_entity_description("Q42", cache = cache)
+
+# Select specific languages.
+wb_entity_description(
+  "Q42",
+  cache = cache,
+  languages = c("mul", "az", "en", "hu")
+)
+
+# Represent multilingual metadata in wide format.
+wb_entity_description(
+  "Q42",
+  cache = cache,
+  languages = c("mul", "az", "en", "hu"),
+  format = "wide"
+)
 }
+\seealso{
+\code{\link[=wb_get_entity]{wb_get_entity()}}, \code{\link[=wb_entity_cache]{wb_entity_cache()}},
+\code{\link[=wb_entity_assertions]{wb_entity_assertions()}}
 }

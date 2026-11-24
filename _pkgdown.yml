@@ -9,10 +9,16 @@ template:
 
 home:
   links:
-    - text: "Data Observatory"
-      href: https://dataobservatory.eu/
     - text: "dataset R package"
       href: https://dataset.dataobservatory.eu/
+    - text: "Reprex B.V."
+      href: https://reprex.nl/
+      
+articles:
+- title: Getting started
+  navbar: ~
+  contents:
+  - entity-retrieval
 
 authors:
   Daniel Antal:

@@ -1,6 +1,10 @@
 test_that("wb_get_entity retrieves a cached entity", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -19,7 +23,11 @@ test_that("wb_get_entity retrieves a cached entity", {
 
 test_that("wb_get_entity prefers a fresh cached response", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 

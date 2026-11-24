@@ -22,6 +22,8 @@ knitr::opts_chunk$set(
 WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 [![devel-version](https://img.shields.io/badge/devel%20version-0.0.1-blue.svg)](https://github.com/dataobservatory-eu/wikibaser/tree/main)
 
+[![R-CMD-check](https://github.com/dataobservatory-eu/wikibaser/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dataobservatory-eu/wikibaser/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/dataobservatory-eu/wikibaser/graph/badge.svg)](https://app.codecov.io/gh/dataobservatory-eu/wikibaser)
 <!-- badges: end -->
 
 # wikibaser

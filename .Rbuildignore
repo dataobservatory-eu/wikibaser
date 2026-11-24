@@ -3,3 +3,6 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^wikibaser\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^\.github$

@@ -9,7 +9,7 @@
 [![lifecycle](https://lifecycle.r-lib.org/articles/figures/lifecycle-experimental.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Project Status:
 WIP](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![devel-version](https://img.shields.io/badge/devel%20version-0.0.2-blue.svg)](https://github.com/dataobservatory-eu/wikibaser/tree/main)
+[![devel-version](https://img.shields.io/badge/devel%20version-0.0.21-blue.svg)](https://github.com/dataobservatory-eu/wikibaser/tree/main)
 [![R-CMD-check](https://github.com/dataobservatory-eu/wikibaser/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dataobservatory-eu/wikibaser/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/dataobservatory-eu/wikibaser/graph/badge.svg)](https://app.codecov.io/gh/dataobservatory-eu/wikibaser)

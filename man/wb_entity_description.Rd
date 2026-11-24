@@ -10,7 +10,7 @@ wb_entity_description(
   equivalency_property = NULL,
   format = c("long", "wide"),
   languages = NULL,
-  cache = NULL
+  policy = c("prefer-cache", "prefer-api", "cache-only", "api-only")
 )
 }
 \arguments{
@@ -30,6 +30,9 @@ Either \code{"long"} (default) or \code{"wide"}.}
 \item{languages}{An optional character vector of Wikibase
 language codes, such as \code{c("en", "hu", "nl")}.
 Defaults to \code{NULL}, returning all available languages.}
+
+\item{policy}{Entity retrieval policy passed to \code{\link[=wb_get_entity]{wb_get_entity()}}.
+Use \code{"cache-only"} for offline retrieval without authentication.}
 
 \item{cache}{An optional entity cache created with
 \code{\link[=wb_entity_cache]{wb_entity_cache()}}.}

@@ -51,3 +51,7 @@ review-wikibaser.txt
 load_txb_credentials.R
 *.jpg
 docs
+not_included
+inst/doc
+/doc/
+/Meta/

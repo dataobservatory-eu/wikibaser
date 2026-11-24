@@ -88,3 +88,8 @@ between Wikibase repositories and Wikidata.
 
 Contributions, bug reports and feature requests are welcome
 via the [GitHub issue tracker](https://github.com/dataobservatory-eu/wikibaser/issues).
+
+```{r}
+citation("wikibaser")
+```
+

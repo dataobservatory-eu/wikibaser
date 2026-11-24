@@ -86,3 +86,23 @@ repositories and Wikidata.
 Contributions, bug reports and feature requests are welcome via the
 [GitHub issue
 tracker](https://github.com/dataobservatory-eu/wikibaser/issues).
+
+``` r
+citation("wikibaser")
+#> Warning in citation("wikibaser"): could not determine year for 'wikibaser' from
+#> package DESCRIPTION file
+#> To cite package 'wikibaser' in publications use:
+#> 
+#>   Antal D (????). _wikibaser: Tools for MediaWiki, Wikibase and
+#>   Wikidata Federation_. R package version 0.0.2,
+#>   <https://wikibaser.dataobservatory.eu/>.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @Manual{,
+#>     title = {wikibaser: Tools for MediaWiki, Wikibase and Wikidata Federation},
+#>     author = {Daniel Antal},
+#>     note = {R package version 0.0.2},
+#>     url = {https://wikibaser.dataobservatory.eu/},
+#>   }
+```

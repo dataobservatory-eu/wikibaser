@@ -1,15 +1,22 @@
 bibentry(
   bibtype = "Manual",
-  title = "wikibaser: Tools for MediaWiki, Wikibase and Wikidata Federation",
-  person(given="Daniel", family="Antal", 
-           email= "daniel.antal@dataobservatory.eu", 
-            role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-7513-6760")),
+  key = "wikibaser2026",
+  title = paste(
+    "wikibaser: Tools for MediaWiki,",
+    "Wikibase and Wikidata Federation"
+  ),
+  author = person(
+    given = "Daniel",
+    family = "Antal"
+  ),
   year = "2026",
-  month = "11", 
-  day = "24",
-  version = "0.0.2",
-  publisher = "Reprex B.V.",
+  organisation = "Reprex B.V.",
   note = "R package version 0.0.2",
-  doi = "10.5281/10.5281/zenodo.24513101"
+  doi = "10.5281/zenodo.24513101",
+  textVersion = paste(
+    "Antal, D. (2026).",
+    "wikibaser: Tools for MediaWiki, Wikibase and Wikidata Federation.",
+    "R package version 0.0.2. Reprex B.V.",
+    "https://doi.org/10.5281/zenodo.24513101"
+  )
 )

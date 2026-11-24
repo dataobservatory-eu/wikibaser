@@ -4,7 +4,7 @@
   "identifier": "wikibaser",
   "description": "Provides a lightweight interface to the MediaWiki Action API for working with Wikibase repositories and Wikidata. Supports authentication, entity and file operations, and simple federation workflows between Wikibase instances and Wikidata.",
   "name": "wikibaser: Tools for MediaWiki, Wikibase and Wikidata Federation",
-  "codeRepository": "https://github.com/dataobservatory-eu/wikibaser",
+  "codeRepository": "https://wikibaser.dataobservatory.eu/",
   "issueTracker": "https://github.com/dataobservatory-eu/wikibaser/issues/",
   "license": "https://spdx.org/licenses/GPL-3.0",
   "version": "0.0.2",
@@ -44,6 +44,30 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=keyring"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "knitr",
+      "name": "knitr",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=knitr"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "rmarkdown",
+      "name": "rmarkdown",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=rmarkdown"
     },
     {
       "@type": "SoftwareApplication",
@@ -138,13 +162,30 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=tibble"
     },
+    "7": {
+      "@type": "SoftwareApplication",
+      "identifier": "tidyr",
+      "name": "tidyr",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=tidyr"
+    },
     "SystemRequirements": null
   },
-  "fileSize": "409.552KB",
-  "relatedLink": "https://wikibaser.dataobservatory.eu/",
-  "releaseNotes": "https://github.com/dataobservatory-eu/wikibaser/blob/main/NEWS.md",
-  "readme": "https://github.com/dataobservatory-eu/wikibaser/blob/main/README.md",
-  "contIntegration": ["https://github.com/dataobservatory-eu/wikibaser/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/dataobservatory-eu/wikibaser"],
-  "developmentStatus": ["https://lifecycle.r-lib.org/articles/stages.html#experimental", "https://www.repostatus.org/#wip"],
-  "keywords": ["r", "wikibase", "wikibase-api", "wikibaseintegrator", "wikidata", "wikidata-bot"]
+  "fileSize": "2223.501KB",
+  "citation": [
+    {
+      "@type": "SoftwareSourceCode",
+      "datePublished": "2026",
+      "name": "wikibaser: Tools for MediaWiki, Wikibase and Wikidata Federation",
+      "identifier": "10.5281/10.5281/zenodo.24513101",
+      "description": "R package version 0.0.2",
+      "@id": "https://doi.org/10.5281/10.5281/zenodo.24513101",
+      "sameAs": "https://doi.org/10.5281/10.5281/zenodo.24513101"
+    }
+  ]
 }

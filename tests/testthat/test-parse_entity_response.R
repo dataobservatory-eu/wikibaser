@@ -1,6 +1,8 @@
 test_that("parse_entity_response parses the Q42 fixture", {
-  file <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  file <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   body <- readBin(file, what = "raw", n = file.info(file)$size)
@@ -15,8 +17,10 @@ test_that("parse_entity_response parses the Q42 fixture", {
 
 
 test_that("parse_entity_response preserves the entity structure", {
-  file <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  file <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   body <- readBin(file, what = "raw", n = file.info(file)$size)
@@ -89,8 +93,10 @@ test_that("parse_entity_response rejects missing entities", {
 
 
 test_that("parse_entity_response rejects absent entity identifiers", {
-  file <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  file <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   body <- readBin(file, what = "raw", n = file.info(file)$size)

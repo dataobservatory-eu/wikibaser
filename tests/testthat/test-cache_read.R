@@ -1,6 +1,10 @@
 test_that("cache_read reads the Q42 fixture", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -24,7 +28,11 @@ test_that("cache_read reads the Q42 fixture", {
 
 test_that("cache_read preserves the original response bytes", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -52,8 +60,10 @@ test_that("cache_read identifies fresh and stale responses", {
 
   on.exit(unlink(cache$path, recursive = TRUE))
 
-  fixture <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  fixture <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   file <- file.path(cache$path, "Q42.json")
@@ -90,8 +100,10 @@ test_that("cache_read respects the maximum cache age", {
 
   on.exit(unlink(cache$path, recursive = TRUE))
 
-  fixture <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  fixture <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   file <- file.path(cache$path, "Q42.json")
@@ -112,8 +124,10 @@ test_that("cache_read treats future timestamps as stale", {
 
   on.exit(unlink(cache$path, recursive = TRUE))
 
-  fixture <- testthat::test_path(
-    "fixtures", "wikidata-cache", "Q42.json"
+  fixture <- system.file(
+    "extdata", "wikidata-cache", "Q42.json",
+    package = "wikibaser",
+    mustWork = TRUE
   )
 
   file <- file.path(cache$path, "Q42.json")

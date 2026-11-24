@@ -1,6 +1,10 @@
 test_that("check_entity_cache accepts the Wikidata cache fixture", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -30,7 +34,11 @@ test_that("check_entity_cache rejects invalid cache objects", {
 
 test_that("check_entity_cache rejects a cache with a missing directory", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -46,7 +54,11 @@ test_that("check_entity_cache rejects a cache with a missing directory", {
 
 test_that("check_entity_cache rejects an ordinary list", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 

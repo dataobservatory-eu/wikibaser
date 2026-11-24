@@ -18,7 +18,11 @@ test_that("resolve_entity_source accepts an explicit API URL", {
 
 test_that("resolve_entity_source uses the cache URL", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -36,7 +40,11 @@ test_that("resolve_entity_source uses the cache URL", {
 
 test_that("resolve_entity_source rejects conflicting cache URLs", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -122,7 +130,11 @@ test_that("resolve_entity_source accepts matching session and cache", {
 
 test_that("resolve_entity_source rejects different repositories", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 
@@ -166,7 +178,11 @@ test_that("resolve_entity_source rejects different usernames", {
 
 test_that("resolve_entity_source rejects authenticated use of public cache", {
   cache <- wb_entity_cache(
-    path = testthat::test_path("fixtures", "wikidata-cache"),
+    path = system.file(
+      "extdata", "wikidata-cache",
+      package = "wikibaser",
+      mustWork = TRUE
+    ),
     max_age_hours = Inf
   )
 

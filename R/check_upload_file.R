@@ -10,21 +10,20 @@
 #'
 #' @noRd
 check_upload_file <- function(file) {
-  
   if (!is.character(file) || length(file) != 1L || is.na(file)) {
     cli::cli_abort(
       "{.arg file} must be a single file path.",
       class = "wikibaser_invalid_file"
     )
   }
-  
+
   if (!nzchar(file)) {
     cli::cli_abort(
       "{.arg file} must not be an empty string.",
       class = "wikibaser_invalid_file"
     )
   }
-  
+
   if (!file.exists(file)) {
     cli::cli_abort(
       c(
@@ -34,6 +33,6 @@ check_upload_file <- function(file) {
       class = "wikibaser_file_not_found"
     )
   }
-  
+
   invisible(normalizePath(file, winslash = "/", mustWork = TRUE))
 }

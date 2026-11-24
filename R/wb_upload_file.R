@@ -37,14 +37,13 @@ wb_upload_file <- function(session,
                            text = NULL,
                            comment = NULL,
                            ignorewarnings = FALSE) {
-  
   session <- check_session(session)
   file <- check_upload_file(file)
-  
+
   if (!is.character(filename) || length(filename) != 1L || is.na(filename)) {
     cli::cli_abort("{.arg filename} must be a single character string.")
   }
-  
+
   req <- session$request |>
     httr2::req_method("POST") |>
     httr2::req_body_multipart(
@@ -57,10 +56,10 @@ wb_upload_file <- function(session,
       ignorewarnings = if (ignorewarnings) "1" else "0",
       format = "json"
     )
-  
+
   resp <- httr2::req_perform(req)
   body <- httr2::resp_body_json(resp)
-  
+
   if (!identical(body$upload$result, "Success")) {
     cli::cli_abort(
       c(
@@ -69,9 +68,8 @@ wb_upload_file <- function(session,
       )
     )
   }
-  
+
   cli::cli_alert_success("Uploaded {.file {filename}}.")
-  
+
   body$upload
 }
-

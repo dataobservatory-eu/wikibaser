@@ -1,0 +1,80 @@
+#' Calculate statement density by entity and property
+#'
+#' Converts a data frame of Wikibase entity assertions into a
+#' cardinality representation, where each property cell contains
+#' the number of asserted values for the corresponding entity.
+#'
+#' @param x A data frame or tibble of collapsed Wikibase entity
+#'   assertions, as returned by [wb_entity_assertions()] with
+#'   `multiple = "collapse"`.
+#'
+#' @details
+#' Property columns are identified by their Wikibase property
+#' identifiers, such as `P31` or `P279`. Values are counted using
+#' [count_statements()], assuming that multiple values are
+#' separated by `" | "`.
+#'
+#' Missing, empty and whitespace-only values have a cardinality
+#' of zero. Repeated values are counted individually.
+#'
+#' All non-property columns, including entity identifiers and
+#' equivalent identifiers, are retained unchanged.
+#'
+#' The resulting cardinality representation can be used to
+#' calculate property coverage, entity completeness, statement
+#' density and sparsity across a collection of Wikibase entities.
+#'
+#' Sequentially widened property columns, such as `P31_1` and
+#' `P31_2`, are not processed.
+#'
+#' @returns A tibble with the same dimensions and column names
+#'   as `x`, with property values replaced by integer counts.
+#'
+#' @seealso [count_statements()], [wb_entity_assertions()]
+#'
+#' @export
+#'
+#' @examples
+#' assertions <- tibble::tibble(
+#'   id = c("Q1", "Q2", "Q3"),
+#'   P31 = c("Q5 | Q6", "Q5", "Q6"),
+#'   P34 = c("Cotton", NA_character_, "Wool | Silk"),
+#'   P50 = c(NA_character_, NA_character_, "Blue")
+#' )
+#'
+#' density <- statement_density(assertions)
+#' density
+#'
+#' # Extract the entity-property cardinality matrix.
+#' properties <- grepl("^P[1-9][0-9]*$", names(density))
+#' m <- as.matrix(density[properties])
+#' rownames(m) <- density$id
+#'
+#' # Total number of represented assertion values.
+#' sum(m)
+#'
+#' # Number of assertion values per entity.
+#' rowSums(m)
+#'
+#' # Number of assertion values per property.
+#' colSums(m)
+#'
+#' # Property coverage.
+#' colMeans(m > 0)
+#'
+#' # Entity completeness.
+#' rowMeans(m > 0)
+#'
+#' # Overall density and sparsity.
+#' mean(m > 0)
+#' mean(m == 0)
+#'
+#' # Maximum cardinality per property.
+#' apply(m, 2, max)
+statement_density <- function(x) {
+  properties <- grepl("^P[1-9][0-9]*$", names(x))
+
+  x[properties] <- lapply(x[properties], count_statements)
+
+  tibble::as_tibble(x)
+}

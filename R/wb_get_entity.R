@@ -1,3 +1,116 @@
+#' Retrieve a Wikibase entity
+#'
+#' Retrieves an item or property from a Wikibase repository or a
+#' local entity cache. Supports public and authenticated repositories,
+#' configurable cache policies and retrieval of the original JSON
+#' response.
+#'
+#' @param id A character string containing a Wikibase item or property
+#'   identifier, such as `"Q42"` or `"P31"`.
+#' @param session An optional authenticated Wikibase session returned
+#'   by [wb_login()].
+#' @param url An optional Wikibase API endpoint. If omitted, the
+#'   endpoint is determined from the session or cache. If neither
+#'   is supplied, the Wikidata API is used.
+#' @param as Character string specifying the return format.
+#'   Either `"list"` (default) or `"json"`.
+#' @param cache An optional entity cache created with
+#'   [wb_entity_cache()].
+#' @param policy Character string specifying the cache policy.
+#'   One of `"prefer-cache"` (default), `"prefer-api"`,
+#'   `"cache-only"` or `"api-only"`. See Details.
+#'
+#' @details
+#' The function retrieves a single entity using the Wikibase
+#' `wbgetentities` API action. Both items and properties are supported.
+#'
+#' The available cache policies are:
+#' \describe{
+#'   \item{`"prefer-cache"`}{
+#'     Uses a fresh cached response when available. Otherwise,
+#'     retrieves the entity from the API. Falls back to a cached
+#'     response if the API connection fails.
+#'   }
+#'   \item{`"prefer-api"`}{
+#'     Retrieves the entity from the API first. Falls back to a
+#'     cached response if the API connection fails.
+#'   }
+#'   \item{`"cache-only"`}{
+#'     Retrieves the entity exclusively from the local cache,
+#'     regardless of its age. An error is raised if the entity
+#'     is not available in the cache.
+#'   }
+#'   \item{`"api-only"`}{
+#'     Retrieves the entity directly from the API without reading
+#'     or updating cached responses.
+#'   }
+#' }
+#'
+#' A warning is issued whenever a stale cached response is used.
+#' Successfully retrieved and validated API responses are stored
+#' in the cache unless the `"api-only"` policy is selected.
+#'
+#' When a session, URL and cache are supplied together, their
+#' repository endpoints must agree. An authenticated cache can
+#' be refreshed only with a matching authenticated session.
+#' Previously cached entities can be retrieved offline without
+#' authentication.
+#'
+#' Cache fallback applies to API connection failures, not to
+#' API errors or missing entities.
+#'
+#' @returns
+#' If `as = "list"`, a nested list containing the parsed entity,
+#' including its identifier, descriptive metadata and statements.
+#'
+#' If `as = "json"`, a character string containing the path to a
+#' temporary JSON file with the complete original API response.
+#' This file is independent of the cache and may be removed by
+#' the caller when no longer needed.
+#'
+#' @seealso [wb_entity_cache()], [wb_login()]
+#'
+#' @export
+#'
+#' @examples
+#' # Open the bundled Wikidata example cache.
+#' cache <- wb_entity_cache(
+#'   path = system.file(
+#'     "extdata", "wikidata-cache",
+#'     package = "wikibaser",
+#'     mustWork = TRUE
+#'   ),
+#'   max_age_hours = Inf
+#' )
+#'
+#' # Retrieve an entity without an internet connection.
+#' entity <- wb_get_entity(
+#'   id = "Q42",
+#'   cache = cache,
+#'   policy = "cache-only"
+#' )
+#'
+#' entity$id
+#' entity$labels$mul$value
+#'
+#' # Retrieve the original JSON response.
+#' json_file <- wb_get_entity(
+#'   id = "Q42",
+#'   as = "json",
+#'   cache = cache,
+#'   policy = "cache-only"
+#' )
+#'
+#' file.exists(json_file)
+#' unlink(json_file)
+#'
+#' \donttest{
+#' # Retrieve an item directly from Wikidata.
+#' wb_get_entity("Q42")
+#'
+#' # Retrieve a property directly from Wikidata.
+#' wb_get_entity("P31")
+#' }
 wb_get_entity <- function(
   id,
   session = NULL,

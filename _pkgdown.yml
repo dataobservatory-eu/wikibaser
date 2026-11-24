@@ -1,0 +1,57 @@
+template:
+  bootstrap: 5
+  bslib:
+    base_font: {google: "Roboto"}
+    heading_font: {google: "Roboto Slab"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  links:
+    - text: "Data Observatory"
+      href: https://dataobservatory.eu/
+    - text: "dataset R package"
+      href: https://dataset.dataobservatory.eu/
+
+authors:
+  Daniel Antal:
+    href: https://reprex.nl/authors/daniel_antal/
+  Reprex:
+    href: https://reprex.nl/
+    html: <img src="https://reprex.nl/authors/admin/avatar_hud66277e7f64fbf44513e7a4881e2a94f_35557_270x270_fill_lanczos_center_2.png"
+      height="24" />
+
+reference:
+  - title: "Authentication and media management"
+    desc: >
+      Authenticate with MediaWiki and Wikibase repositories
+      and upload media files.
+    contents:
+      - wb_login
+      - wb_upload_file
+
+  - title: "Entity retrieval and caching"
+    desc: >
+      Retrieve Wikibase items and properties from public or
+      authenticated repositories, with optional local caching
+      and offline access to original API responses.
+    contents:
+      - wb_get_entity
+      - wb_entity_cache
+
+  - title: "Entity descriptions and assertions"
+    desc: >
+      Represent multilingual entity descriptions and property
+      values as tibbles, with optional equivalent identifiers
+      for federation across Wikibase repositories.
+    contents:
+      - wb_entity_description
+      - wb_entity_assertions
+
+  - title: "Statement analysis and data quality"
+    desc: >
+      Count represented assertion values and analyse property
+      cardinality, coverage, density and sparsity across
+      collections of Wikibase entities.
+    contents:
+      - count_statements
+      - statement_density

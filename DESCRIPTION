@@ -19,7 +19,8 @@ Imports:
     cli,
     curl,
     httr2,
-    jsonlite
+    jsonlite,
+    tibble
 Suggests: 
     keyring,
     spelling,

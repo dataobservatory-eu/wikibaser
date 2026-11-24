@@ -6,7 +6,6 @@
 #' @returns Invisibly returns `session`.
 #' @noRd
 check_session <- function(session) {
-  
   if (!inherits(session, "wikibase_session")) {
     cli::cli_abort(
       c(
@@ -16,8 +15,6 @@ check_session <- function(session) {
       class = "wikibaser_invalid_session"
     )
   }
-  
+
   invisible(session)
 }
-
-

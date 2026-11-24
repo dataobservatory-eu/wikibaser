@@ -1,0 +1,246 @@
+---
+title: "Reproducible retrieval of Wikibase entities"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reproducible retrieval of Wikibase entities}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(wikibaser)
+```
+
+## Retrieving entities from Wikibase
+
+Wikidata is a collaboratively edited knowledge base built on Wikibase.
+Other Wikimedia projects and independent organisations can also operate
+Wikibase repositories with their own items, properties and identifiers.
+
+An item is identified by a QID, such as [Q42](https://www.wikidata.org/wiki/Q42)
+(Douglas Adams), and a property by a PID, such as
+[P31](https://www.wikidata.org/wiki/Property:P31) (instance of).
+An entity can have multilingual labels, descriptions and aliases, as well
+as statements. Items can also have sitelinks to pages on other wikis.
+
+The `wb_get_entity()` function is an R wrapper around the MediaWiki
+Action API module [`wbgetentities`](https://www.wikidata.org/w/api.php?action=help&modules=wbgetentities).
+Although the API module supports retrieving multiple entities, this R
+function retrieves one item or property at a time. By default, it uses
+Wikidata; authenticated sessions can be used with other Wikibase repositories.
+
+## A reproducible copy of Q42
+
+Wikidata is continuously edited. Retrieving the same QID on different days
+may therefore return different labels, statements or references.
+To make the examples reproducible, wikibaser includes a saved API response
+for Q42 in its example data.
+
+```{r fixture}
+cache_path <- system.file(
+  "extdata", "wikidata-cache", package = "wikibaser", mustWork = TRUE
+)
+fixture_file <- file.path(cache_path, "Q42.json")
+fixture_date <- as.Date(file.info(fixture_file)$mtime, tz = "UTC")
+fixture_date
+```
+
+The bundled response has a file modification date of **`r format(fixture_date, "%d %B %Y")`**
+(UTC). This is the recorded date of the local file, not necessarily the
+original retrieval date: installation or copying may change file timestamps.
+The saved entity may no longer be fully in sync with live Wikidata.
+
+```{r cache}
+cache <- wb_entity_cache(path = cache_path, max_age_hours = Inf)
+entity <- wb_get_entity("Q42", cache = cache, policy = "cache-only")
+```
+
+The `cache-only` policy reads the saved response without contacting Wikidata.
+The infinite maximum cache age is appropriate for a fixed historical fixture.
+For ordinary working caches, a finite maximum age may be more appropriate.
+
+The saved response also contains the entity's revision identifier and last
+modification timestamp. These describe the saved Wikidata revision, rather
+than the date on which the local file was written.
+
+```{r revision}
+entity$id
+entity$lastrevid
+entity$modified
+```
+
+## Inspecting the saved entity
+
+The default result is an R list representing the entity returned by the API.
+
+```{r entity}
+names(entity)
+entity$labels$mul
+entity$claims$P31
+```
+
+The language code `mul` denotes a default label used across languages.
+It is not an English (`en`) label, and should not be silently treated as one.
+
+The original API response can also be retrieved as a JSON file.
+
+```{r json}
+json_file <- wb_get_entity(
+  "Q42", cache = cache, policy = "cache-only", as = "json"
+)
+file.exists(json_file)
+```
+
+This file is a separate temporary copy of the complete API response,
+including the response envelope. The bundled fixture remains unchanged.
+
+## Labels, descriptions and aliases
+
+Labels identify an entity for human readers, descriptions help distinguish
+it from similarly named entities, and aliases provide alternative names.
+The `wb_entity_description()` function represents these multilingual terms
+as a tibble.
+
+```{r descriptions}
+descriptions <- wb_entity_description("Q42", cache = cache)
+head(descriptions)
+```
+
+In the default long format, each row represents an entity and a language.
+Multiple aliases in the same language are separated by ` | `.
+Missing terms are represented by `NA`.
+
+We can select particular languages without introducing translations or
+substituting labels from another language.
+
+```{r languages}
+languages <- c("mul", "az", "en", "hu")
+selected <- wb_entity_description(
+  "Q42", cache = cache, languages = languages
+)
+selected
+```
+
+For a directory of entities, a wide representation is often more convenient.
+Each language-specific term becomes a separate variable.
+
+```{r wide}
+wide <- wb_entity_description(
+  "Q42", cache = cache, languages = languages, format = "wide"
+)
+wide
+```
+
+Requested languages with no descriptive metadata are omitted. A language
+with a description but no label is retained, with a missing label value.
+The description wrapper uses the default `prefer-cache` retrieval policy.
+With the bundled response and infinite cache age, these examples normally
+read from the local cache without making an API request.
+
+## Selecting statement values
+
+A Wikibase statement consists of a main snak and may also have qualifiers,
+references and a rank. The main snak associates a property with a value,
+or indicates that the value is unknown or that there is no value.
+
+For a directory, we may need only selected main-snak values, rather than
+all the information contained in each statement. Here we select
+P31 (instance of) and P106 (occupation) from the saved entity.
+
+```{r statements}
+properties <- c("P31", "P106")
+values <- lapply(properties, function(property) {
+  statements <- entity$claims[[property]]
+  values <- vapply(statements, function(statement) {
+    if (identical(statement$rank, "deprecated")) {
+      return(NA_character_)
+    }
+    value <- statement$mainsnak$datavalue$value$id
+    if (is.null(value)) NA_character_ else value
+  }, FUN.VALUE = character(1))
+  values <- values[!is.na(values)]
+  if (length(values)) paste(values, collapse = " | ") else NA_character_
+})
+names(values) <- properties
+values
+```
+
+This example is deliberately limited to item-valued properties. The values
+are QIDs, not labels. Multiple values are retained in their returned order,
+separated by ` | `. Deprecated statements and statements without a concrete
+item value are excluded. Both normal and preferred ranks are retained.
+
+We can add these selected values to the wide descriptive record and rename
+the properties for human readers.
+
+```{r directory}
+directory <- wide
+directory$instance_of <- values$P31
+directory$occupation <- values$P106
+directory
+```
+
+The package also provides `wb_entity_assertions()` for tabular extraction
+of main-snak values across properties, with collapsed or widened multiple
+values. The explicit extraction above works directly with the saved entity
+and does not require another retrieval. A flattened directory is a derived
+representation, not a replacement for the original Wikibase statements:
+qualifiers, references, ranks and statement identifiers are not preserved
+in these columns.
+
+## Validating reproducible results
+
+A saved API response allows us to check that a transformation produces the
+expected result for a known input. For example, the bundled Q42 response
+contains the default label Douglas Adams and an instance-of value Q5
+(human).
+
+```{r validate}
+stopifnot(
+  identical(entity$id, "Q42"),
+  identical(wide$label_mul, "Douglas Adams"),
+  "Q5" %in% strsplit(values$P31, " | ", fixed = TRUE)[[1]]
+)
+```
+
+We can also check that the JSON output preserves the original API response
+byte for byte.
+
+```{r validate-json}
+stopifnot(identical(
+  readBin(fixture_file, "raw", n = file.info(fixture_file)$size),
+  readBin(json_file, "raw", n = file.info(json_file)$size)
+))
+unlink(json_file)
+```
+
+These checks validate the retrieval and transformation of the saved data.
+They do not establish that the statements are true, complete or still
+current on Wikidata. Evaluating their sources and meaning remains a separate
+review task.
+
+## Working with live repositories
+
+For live Wikidata retrieval, use the same wrapper without a cache, or create
+a separate working cache. The following examples are not evaluated when
+building this vignette.
+
+```{r live, eval=FALSE}
+current_entity <- wb_get_entity("Q42")
+working_cache <- wb_entity_cache(max_age_hours = 24)
+current_entity <- wb_get_entity(
+  "Q42", cache = working_cache, policy = "prefer-api"
+)
+```
+
+A working cache can be refreshed as the repository changes. The bundled
+fixture should instead be treated as read-only, so that examples and tests
+continue to refer to the same saved revision.
+
+## Further reading
+
+- [Wikibase DataModel](https://www.mediawiki.org/wiki/Wikibase/DataModel)
+- [Wikibase API](https://www.mediawiki.org/wiki/Wikibase/API)
+- [Wikidata: Statements](https://www.wikidata.org/wiki/Help:Statements)
+- [Wikidata: Labels](https://www.wikidata.org/wiki/Help:Label)
